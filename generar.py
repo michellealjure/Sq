@@ -109,7 +109,7 @@ canvas = np.empty((H, W, 3), np.float32)
 canvas[:] = PAPER
 
 # Retícula del 29
-CELL = cm(1.4)
+CELL = cm(1.26)  # 10 % más pequeño que la versión anterior (1,4 cm)
 glyph_2 = [
     "..XXXXXX..",
     ".XXXXXXXXX",
@@ -142,9 +142,9 @@ num_left = cm(11.0) - 5 * CELL
 num_top = (H - NUM_ROWS * CELL) // 2
 MAX_COL = int((P1_END - num_left) // CELL)  # última columna completa dentro de la Parte 1
 
-C0, R0 = -3, -2
+C0, R0 = -4, -3
 ncols = MAX_COL - C0
-nrows = NUM_ROWS + 4
+nrows = NUM_ROWS + 6
 shape = np.zeros((nrows, ncols), bool)
 for r, line in enumerate(glyph_2):
     for c, ch in enumerate(line):
@@ -190,8 +190,8 @@ for ri in range(nrows):
             s_num = max(s_num, RNG.uniform(0.035, 0.06) if RNG.random() < 0.6 else 0)
             dl = edge[ri] - c  # 1 = celda pegada al paisaje
             s_land = 0.76 * np.exp(-(dl - 1) * 0.6) * RNG.uniform(0.8, 1.08)
-            s = float(min(max(s_num, s_land), 0.92))
-            src = "land" if s_land >= s_num else "frag"
+            s = float(min(s_num, 0.92))
+            src = "frag"
         if s <= 0:
             continue
         size = max(int(round(CELL * s)), 6)
@@ -205,6 +205,21 @@ for x0, y0, size, src in squares:
         continue
     tex = fragments if (src == "frag" and xb <= P1_END) else landscape
     canvas[ya:yb, xa:xb] = tex[ya:yb, xa:xb]
+
+# ---------------------------------------------------------------------------
+# 2b. Cuadrados blancos "desprendidos" del paisaje junto a su borde
+for ri in range(nrows):
+    for c in range(edge[ri], MAX_COL + 1):
+        k = c - edge[ri]
+        if RNG.random() > (0.30 if k == 0 else 0.16 if k == 1 else 0.07):
+            continue
+        cx = num_left + c * CELL + CELL / 2
+        cy = num_top + (ri + R0) * CELL + CELL / 2
+        size = int(CELL * RNG.uniform(0.45, 0.88))
+        x0, y0 = int(cx - size / 2), int(cy - size / 2)
+        if x0 + size > P1_END - cm(0.2):
+            continue
+        canvas[max(y0, 0):max(y0 + size, 0), x0:x0 + size] = PAPER
 
 # ---------------------------------------------------------------------------
 # 3. Parte 2: recortes cuadrados blancos / crema concentrados en el centro
@@ -227,6 +242,23 @@ while len(placed) < 46 and tries < 20000:
            y0 < py + ps + gap and py < y0 + size + gap for px, py, ps in placed):
         continue
     placed.append((x0, y0, size))
+
+# refuerzo de la zona superior izquierda de la Parte 2
+extra, tries = 0, 0
+while extra < 13 and tries < 20000:
+    tries += 1
+    size = cm(RNG.uniform(1.2, 2.2)) if RNG.random() < 0.3 else cm(RNG.uniform(0.45, 1.1))
+    x = RNG.normal(LOMO_END + cm(7.5), cm(3.2))
+    y = RNG.normal(cm(10.5), cm(3.6))
+    x0, y0 = int(x - size / 2), int(y - size / 2)
+    if x0 < safe_x0 or x0 + size > safe_x1 or y0 < safe_y0 or y0 + size > safe_y1:
+        continue
+    gap = cm(0.3)
+    if any(x0 < px + ps + gap and px < x0 + size + gap and
+           y0 < py + ps + gap and py < y0 + size + gap for px, py, ps in placed):
+        continue
+    placed.append((x0, y0, size))
+    extra += 1
 
 for x0, y0, size in placed:
     col = CUT_WHITE if RNG.random() < 0.55 else CUT_CREAM
