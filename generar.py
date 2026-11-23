@@ -215,8 +215,10 @@ for ri in range(nrows):
             continue
         cx = num_left + c * CELL + CELL / 2
         cy = num_top + (ri + R0) * CELL + CELL / 2
-        size = int(CELL * RNG.uniform(0.45, 0.88))
-        x0, y0 = int(cx - size / 2), int(cy - size / 2)
+        RNG.uniform(0.45, 0.88)  # (mantiene la secuencia aleatoria del resto)
+        # hueco a celda completa: sin franja de paisaje alrededor
+        size = CELL
+        x0, y0 = num_left + c * CELL, num_top + (ri + R0) * CELL
         if x0 + size > P1_END - cm(0.2):
             continue
         canvas[max(y0, 0):max(y0 + size, 0), x0:x0 + size] = PAPER
