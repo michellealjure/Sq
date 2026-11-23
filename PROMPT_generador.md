@@ -14,7 +14,7 @@ Formato: horizontal, proporción **58,5 : 35,1 (≈ 5:3)**. Si el generador no a
 >
 > CENTER STRIP AND RIGHT HALF: one continuous mountain valley landscape — layered blue-green mountain ranges, rolling green hills, a valley with small red-roofed houses and red dirt paths, a lone pine tree, a wide cloudy sky. Rendered as a hand-printed stippled illustration: fine visible grain, colour built from tiny dots and marks, simplified organic shapes, risograph / screen-print texture, palette of greens, blues, soft yellows with small warm red-ochre accents. Not photographic, no smooth digital gradients, no clean vector look.
 >
-> Over the landscape, concentrated in the middle of the right half, white and cream SQUARE cut-outs of varied sizes (small and medium), randomly but evenly balanced, crisp straight edges with a very subtle inner shadow, like holes punched out of the paper. The landscape stays visible around them.
+> Over the landscape, concentrated in the middle of the right half, pure white SQUARE cut-outs (same white as the paper background) of varied sizes (small and medium), randomly but evenly balanced, crisp straight edges, flat, no shadow, no outline, like holes punched out of the paper. The landscape stays visible around them.
 >
 > Geometric square system + organic nature. Contemporary, editorial, artisanal. No text, no letters other than the 29, no circles, no dots as shapes, no round forms in the modules.
 
@@ -31,7 +31,7 @@ Formato: horizontal, proporción **58,5 : 35,1 (≈ 5:3)**. Si el generador no a
 >
 > FRANJA CENTRAL Y MITAD DERECHA: un solo paisaje continuo de valle montañoso — cordilleras superpuestas azul-verdosas, colinas verdes, valle con pequeñas casas de techo rojo y caminos de tierra rojiza, un pino solitario, cielo amplio con nubes. Estilo ilustración puntillista impresa a mano: grano fino visible, color construido con pequeños puntos y marcas, formas orgánicas simplificadas, textura tipo risografía / serigrafía, paleta de verdes, azules, amarillos suaves y pequeños acentos cálidos. Nada fotográfico, sin degradados digitales, sin acabado vectorial limpio.
 >
-> Sobre el paisaje, concentrados en el centro de la mitad derecha, recortes CUADRADOS blancos y crema de tamaños variados (pequeños y medianos), distribución aleatoria pero equilibrada, bordes rectos y nítidos con una sombra interior muy sutil, como perforaciones en el papel.
+> Sobre el paisaje, concentrados en el centro de la mitad derecha, recortes CUADRADOS blancos (el mismo blanco del fondo) de tamaños variados (pequeños y medianos), distribución aleatoria pero equilibrada, bordes rectos y nítidos, planos, sin sombra ni contorno, como perforaciones en el papel.
 >
 > Sin texto, sin letras aparte del 29, sin círculos.
 

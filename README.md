@@ -7,7 +7,7 @@ Lienzo de 58,5 × 35,1 cm (incluye 0,5 cm de sangrado por lado), 300 dpi.
 |---|---|---|
 | Parte 1 | 27,8 cm | 29 (2 arriba, 9 abajo) construido con retícula de cuadrados que muestran fragmentos del paisaje y se dispersan progresivamente; el paisaje entra por la derecha con borde escalonado |
 | Lomo | 3 cm | continuación del paisaje |
-| Parte 2 | 27,7 cm | paisaje con recortes cuadrados blancos / crema concentrados en el centro |
+| Parte 2 | 27,7 cm | paisaje con recortes cuadrados blancos (mismo blanco del fondo) concentrados en el centro |
 
 ## Archivos
 

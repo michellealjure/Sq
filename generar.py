@@ -263,13 +263,9 @@ while extra < 13 and tries < 20000:
     extra += 1
 
 for x0, y0, size in placed:
-    col = CUT_WHITE if RNG.random() < 0.55 else CUT_CREAM
-    canvas[y0:y0 + size, x0:x0 + size] = col
-    # sombra interior sutil (borde superior e izquierdo) = profundidad de recorte
-    sh = max(4, size // 45)
-    ramp = np.linspace(0.86, 1.0, sh, dtype=np.float32)
-    canvas[y0:y0 + sh, x0:x0 + size] *= ramp[:, None, None]
-    canvas[y0:y0 + size, x0:x0 + sh] *= ramp[None, :, None]
+    RNG.random()  # (mantiene la secuencia aleatoria)
+    # mismo blanco del fondo de la Parte 1: todo lo que no es imagen es blanco
+    canvas[y0:y0 + size, x0:x0 + size] = PAPER
 
 # ---------------------------------------------------------------------------
 # 4. Textura de papel impreso en toda la superficie
