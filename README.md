@@ -9,14 +9,23 @@ Lienzo de 58,5 × 35,1 cm (incluye 0,5 cm de sangrado por lado), 300 dpi.
 | Lomo | 3 cm | continuación de la imagen |
 | Parte 2 | 27,7 cm | imagen (copas de árboles) con recortes cuadrados blancos (mismo blanco del fondo) concentrados en el centro |
 
+## Versiones
+
+Las dos comparten exactamente la misma distribución del 29, la dispersión, los huecos y los recortes.
+
+| Carpeta | Imagen | Estilo |
+|---|---|---|
+| `output/arboles/` | `assets/arboles.jpg` (copa de árboles) | foto en alta resolución |
+| `output/paisaje/` | `assets/paisaje.jpg` (valle) | ilustración puntillista con grano de papel |
+
+En cada carpeta:
+- `sq_caja_58.5x35.1cm_300dpi.png`: PNG RGBA a 300 dpi, los espacios blancos son transparentes.
+- `sq_caja_58.5x35.1cm_300dpi_fondo_blanco.pdf`: la misma composición sobre blanco.
+- `preview.jpg`, `preview_guias.jpg` (sangrado en rojo, pliegues en azul; no se imprime).
+
 ## Archivos
 
-- `generar.py`: genera la composición (`pip install numpy pillow scipy && python3 generar.py`).
-- `assets/arboles.jpg`: fotografía actual (copas de árboles). `assets/paisaje.jpg`: fotografía anterior (valle). `assets/boceto_29.jpg`: boceto del 29.
-- `assets/rng_layout.json`: fija la distribución aprobada de cuadrados y recortes (cambiar la foto no los mueve).
-- En `generar.py`: `SRC` (foto), `STYLE` (`"foto"` alta resolución o `"puntillista"`), `TRANSPARENT` (blancos sin fondo).
-- `output/sq_caja_58.5x35.1cm_300dpi.png`: PNG RGBA, los espacios blancos son transparentes.
-- `output/sq_caja_58.5x35.1cm_300dpi_fondo_blanco.pdf`: la misma composición sobre blanco.
-- `output/preview_transparencia.jpg`: vista con damero para comprobar la transparencia.
-- `output/preview.jpg`: vista previa. `output/preview_guias.jpg`: con sangrado (rojo) y pliegues (azul); no se imprime.
+- `generar.py`: `pip install numpy pillow scipy`, luego `python3 generar.py` (ambas), `python3 generar.py arboles` o `python3 generar.py paisaje`.
+- `assets/rng_layout.json`: fija la distribución aprobada.
+- `assets/boceto_29.jpg`: boceto del 29.
 - `PROMPT_generador.md`: prompt para pasar la composición por un generador de imágenes.

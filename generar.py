@@ -7,8 +7,12 @@ Lienzo: 58,5 x 35,1 cm a 300 dpi (incluye 0,5 cm de sangrado por lado).
   Parte 2: 30,8  – 58,5 cm  -> paisaje con recortes cuadrados blancos / crema
 
 Unidad gráfica: el cuadrado. No se dibuja ningún círculo.
-Uso: python3 generar.py
+Uso:
+  python3 generar.py arboles   -> foto de los árboles en alta resolución (output/arboles/)
+  python3 generar.py paisaje   -> ilustración puntillista del valle (output/paisaje/)
+  python3 generar.py           -> ambas
 """
+import sys, os
 import numpy as np
 from PIL import Image, ImageFilter, ImageEnhance, ImageDraw
 from scipy.ndimage import distance_transform_edt, gaussian_filter, zoom
@@ -28,10 +32,20 @@ CUT_WHITE = np.array([250, 248, 242], np.float32)   # recorte blanco
 CUT_CREAM = np.array([241, 235, 220], np.float32)   # recorte crema
 MARK = 4  # tamaño de la marca puntillista (px a 300 dpi ≈ 0,34 mm), cuadrada
 
-SRC = "assets/arboles.jpg"
-# "foto": la fotografía en alta resolución, sin reinterpretar
-# "puntillista": reinterpretación con marcas cuadradas y grano de impresión
-STYLE = "foto"
+# Versiones. STYLE "foto": la fotografía en alta resolución, sin reinterpretar.
+#            STYLE "puntillista": reinterpretación con marcas cuadradas y grano de impresión.
+VERSIONS = {
+    "arboles": dict(SRC="assets/arboles.jpg", STYLE="foto"),
+    "paisaje": dict(SRC="assets/paisaje.jpg", STYLE="puntillista"),
+}
+if len(sys.argv) < 2:
+    for v in VERSIONS:
+        os.system(f"{sys.executable} {__file__} {v}")
+    sys.exit()
+VERSION = sys.argv[1]
+SRC, STYLE = VERSIONS[VERSION]["SRC"], VERSIONS[VERSION]["STYLE"]
+OUT = f"output/{VERSION}"
+os.makedirs(OUT, exist_ok=True)
 TRANSPARENT = True  # los espacios blancos se exportan sin fondo (PNG con transparencia)
 
 # ---------------------------------------------------------------------------
@@ -104,6 +118,11 @@ else:
     landscape = np.asarray(photo_pan, np.float32)
 # los cuadrados del 29 muestran la imagen que hay "debajo" del papel
 fragments = landscape
+if STYLE == "puntillista":
+    # ilustración anterior: el 29 muestra la zona baja del valle (montañas y vegetación)
+    fx0, fy0 = int(pw * 0.02), int(ph * 0.47)
+    fw = int((ph - fy0) * P1_END / H)
+    fragments = stylize(photo.crop((fx0, fy0, fx0 + fw, ph)), P1_END, H)
 
 # Distribución aprobada (posiciones del 29, dispersión, huecos y recortes):
 # se restaura el estado aleatorio con el que se generó, para que cambiar
@@ -302,13 +321,13 @@ img = Image.fromarray(canvas, "RGB")  # versión sobre blanco
 if TRANSPARENT:
     rgba = img.copy()
     rgba.putalpha(Image.fromarray(alpha.astype(np.uint8) * 255, "L"))
-    rgba.save("output/sq_caja_58.5x35.1cm_300dpi.png", dpi=(DPI, DPI), optimize=True)
+    rgba.save(f"{OUT}/sq_caja_58.5x35.1cm_300dpi.png", dpi=(DPI, DPI), optimize=True)
 else:
-    img.save("output/sq_caja_58.5x35.1cm_300dpi.png", dpi=(DPI, DPI), optimize=True)
-img.save("output/sq_caja_58.5x35.1cm_300dpi_fondo_blanco.pdf", resolution=DPI)
+    img.save(f"{OUT}/sq_caja_58.5x35.1cm_300dpi.png", dpi=(DPI, DPI), optimize=True)
+img.save(f"{OUT}/sq_caja_58.5x35.1cm_300dpi_fondo_blanco.pdf", resolution=DPI)
 
 prev = img.resize((2400, int(2400 * H / W)), Image.LANCZOS)
-prev.save("output/preview.jpg", quality=90)
+prev.save(f"{OUT}/preview.jpg", quality=90)
 
 # guías (solo referencia, no imprimir): sangrado, pliegues, área segura
 g = prev.copy()
@@ -325,5 +344,5 @@ b = BLEED * k
 d.rectangle([b, b, g.width - b, g.height - b], outline=(220, 30, 30), width=2)
 vline(P1_END, (30, 90, 220))
 vline(LOMO_END, (30, 90, 220))
-g.save("output/preview_guias.jpg", quality=90)
+g.save(f"{OUT}/preview_guias.jpg", quality=90)
 print("ok", W, H, "cuadrados 29:", len(squares), "recortes:", len(placed))
