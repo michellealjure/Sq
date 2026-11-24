@@ -1,10 +1,11 @@
 """
 SQ — ilustración panorámica para el interior de una caja (Parte 1 + Lomo + Parte 2).
 
-Lienzo: 58,5 x 35,1 cm a 300 dpi (incluye 0,5 cm de sangrado por lado).
-  Parte 1: 0     – 27,8 cm  -> número 29 construido con cuadrados (fondo blanco)
-  Lomo   : 27,8  – 30,8 cm  -> continuación del paisaje
-  Parte 2: 30,8  – 58,5 cm  -> paisaje con recortes cuadrados blancos / crema
+Lienzo: 56,7 x 35,1 cm a 300 dpi (incluye 0,5 cm de sangrado por lado).
+  Áreas de corte según las guías del montaje (ver TRIM_*):
+  Parte 1: 0,5   – 27,4 cm  -> número 29 construido con cuadrados (fondo blanco)
+  Lomo   : 27,85 – 29,05 cm -> continuación del paisaje
+  Parte 2: 29,6  – 56,2 cm  -> paisaje con recortes cuadrados blancos
 
 Unidad gráfica: el cuadrado. No se dibuja ningún círculo.
 Uso:
@@ -24,8 +25,11 @@ PX_CM = DPI / 2.54
 def cm(v):
     return int(round(v * PX_CM))
 
-W, H = cm(58.5), cm(35.1)
-P1_END, LOMO_END = cm(27.8), cm(30.8)
+# Medidas del documento (guías rosadas del montaje): 56,7 x 35,1 cm con 0,5 cm de sangrado.
+W, H = cm(56.7), cm(35.1)
+# Áreas de corte medidas sobre las guías: Parte 1, lomo y Parte 2 (cm desde la izquierda)
+TRIM_P1, TRIM_LOMO, TRIM_P2 = (0.5, 27.4), (27.85, 29.05), (29.6, 56.2)
+P1_END, LOMO_END = cm(TRIM_P1[1]), cm(TRIM_P2[0])
 BLEED = cm(0.5)
 PAPER = np.array([251, 250, 246], np.float32)       # blanco papel (Parte 1)
 CUT_WHITE = np.array([250, 248, 242], np.float32)   # recorte blanco
@@ -144,7 +148,7 @@ alpha = np.zeros((H, W), bool)  # True = imagen, False = blanco / transparente
 src_map = np.zeros((H, W), np.uint8)  # 1 = paisaje, 2 = fragmentos del 29
 
 # Retícula del 29
-CELL = cm(1.26)  # 10 % más pequeño que la versión anterior (1,4 cm)
+CELL = cm(1.15)  # un poco más pequeño que la versión anterior (1,26 cm)
 glyph_2 = [
     "..XXXXXX..",
     ".XXXXXXXXX",
@@ -173,13 +177,14 @@ glyph_9 = [
 ]
 GH = len(glyph_2)
 NUM_ROWS = GH + 1 + GH  # 2 arriba, 9 abajo (según boceto)
-num_left = cm(11.0) - 5 * CELL
+num_left = cm((TRIM_P1[0] + TRIM_P1[1]) / 2) - 5 * CELL  # centrado en la Parte 1
 num_top = (H - NUM_ROWS * CELL) // 2
 MAX_COL = int((P1_END - num_left) // CELL)  # última columna completa dentro de la Parte 1
 
-C0, R0 = -4, -3
+C0 = -int(np.ceil(num_left / CELL)) - 1
+R0 = -int(np.ceil(num_top / CELL)) - 1
 ncols = MAX_COL - C0
-nrows = NUM_ROWS + 6
+nrows = NUM_ROWS - 2 * R0
 shape = np.zeros((nrows, ncols), bool)
 for r, line in enumerate(glyph_2):
     for c, ch in enumerate(line):
@@ -268,41 +273,22 @@ for ri in range(nrows):
 # ---------------------------------------------------------------------------
 # 3. Parte 2: recortes cuadrados blancos / crema concentrados en el centro
 # ---------------------------------------------------------------------------
-cut_cx, cut_cy = (LOMO_END + W) / 2, H * 0.52
+# Recortes aprobados (assets/recortes_parte2.json, en el lienzo anterior de 58,5 cm).
+# Se reubican proporcionalmente en la nueva Parte 2 y se descartan los que tocan el margen.
+import json
+OLD_P2 = (cm(30.8), cm(58.0))
+NEW_P2 = (cm(TRIM_P2[0]), cm(TRIM_P2[1]))
+REMOVED = {(6690, 1813, 77)}  # recorte pegado al margen derecho (pedido de borrar)
 placed = []
-tries = 0
-safe_x0, safe_x1 = LOMO_END + cm(0.8), W - BLEED - cm(0.4)
-safe_y0, safe_y1 = BLEED + cm(0.4), H - BLEED - cm(0.4)
-while len(placed) < 46 and tries < 20000:
-    tries += 1
-    size = cm(RNG.uniform(1.3, 2.6)) if RNG.random() < 0.38 else cm(RNG.uniform(0.45, 1.2))
-    x = RNG.normal(cut_cx, cm(5.2))
-    y = RNG.normal(cut_cy, cm(5.6))
-    x0, y0 = int(x - size / 2), int(y - size / 2)
-    if x0 < safe_x0 or x0 + size > safe_x1 or y0 < safe_y0 or y0 + size > safe_y1:
+for ox, oy, size in json.load(open("assets/recortes_parte2.json")):
+    if (ox, oy, size) in REMOVED:
         continue
-    gap = cm(0.3)
-    if any(x0 < px + ps + gap and px < x0 + size + gap and
-           y0 < py + ps + gap and py < y0 + size + gap for px, py, ps in placed):
+    ocx = ox + size / 2
+    ncx = NEW_P2[0] + (ocx - OLD_P2[0]) * (NEW_P2[1] - NEW_P2[0]) / (OLD_P2[1] - OLD_P2[0])
+    x0 = int(round(ncx - size / 2))
+    if x0 < NEW_P2[0] + cm(0.4) or x0 + size > NEW_P2[1] - cm(0.4):
         continue
-    placed.append((x0, y0, size))
-
-# refuerzo de la zona superior izquierda de la Parte 2
-extra, tries = 0, 0
-while extra < 13 and tries < 20000:
-    tries += 1
-    size = cm(RNG.uniform(1.2, 2.2)) if RNG.random() < 0.3 else cm(RNG.uniform(0.45, 1.1))
-    x = RNG.normal(LOMO_END + cm(7.5), cm(3.2))
-    y = RNG.normal(cm(10.5), cm(3.6))
-    x0, y0 = int(x - size / 2), int(y - size / 2)
-    if x0 < safe_x0 or x0 + size > safe_x1 or y0 < safe_y0 or y0 + size > safe_y1:
-        continue
-    gap = cm(0.3)
-    if any(x0 < px + ps + gap and px < x0 + size + gap and
-           y0 < py + ps + gap and py < y0 + size + gap for px, py, ps in placed):
-        continue
-    placed.append((x0, y0, size))
-    extra += 1
+    placed.append((x0, oy, size))
 
 for x0, y0, size in placed:
     RNG.random()  # (mantiene la secuencia aleatoria)
@@ -339,10 +325,10 @@ if TRANSPARENT:
             specks |= (src_map == 2) & fr
         alpha &= ~specks
     rgba.putalpha(Image.fromarray(alpha.astype(np.uint8) * 255, "L"))
-    rgba.save(f"{OUT}/sq_caja_58.5x35.1cm_300dpi.png", dpi=(DPI, DPI), optimize=True)
+    rgba.save(f"{OUT}/sq_caja_56.7x35.1cm_300dpi.png", dpi=(DPI, DPI), optimize=True)
 else:
-    img.save(f"{OUT}/sq_caja_58.5x35.1cm_300dpi.png", dpi=(DPI, DPI), optimize=True)
-img.save(f"{OUT}/sq_caja_58.5x35.1cm_300dpi_fondo_blanco.pdf", resolution=DPI)
+    img.save(f"{OUT}/sq_caja_56.7x35.1cm_300dpi.png", dpi=(DPI, DPI), optimize=True)
+img.save(f"{OUT}/sq_caja_56.7x35.1cm_300dpi_fondo_blanco.pdf", resolution=DPI)
 
 prev = img.resize((2400, int(2400 * H / W)), Image.LANCZOS)
 prev.save(f"{OUT}/preview.jpg", quality=90)
@@ -359,8 +345,8 @@ def vline(x, color, dash=False):
     else:
         d.line([(X, 0), (X, g.height)], fill=color, width=2)
 b = BLEED * k
-d.rectangle([b, b, g.width - b, g.height - b], outline=(220, 30, 30), width=2)
-vline(P1_END, (30, 90, 220))
-vline(LOMO_END, (30, 90, 220))
+d.rectangle([0, 0, g.width - 1, g.height - 1], outline=(230, 40, 200), width=2)
+for x0c, x1c in (TRIM_P1, TRIM_LOMO, TRIM_P2):
+    d.rectangle([cm(x0c) * k, b, cm(x1c) * k, g.height - b], outline=(230, 40, 200), width=2)
 g.save(f"{OUT}/preview_guias.jpg", quality=90)
 print("ok", W, H, "cuadrados 29:", len(squares), "recortes:", len(placed))
