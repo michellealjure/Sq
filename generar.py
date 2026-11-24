@@ -28,7 +28,11 @@ CUT_WHITE = np.array([250, 248, 242], np.float32)   # recorte blanco
 CUT_CREAM = np.array([241, 235, 220], np.float32)   # recorte crema
 MARK = 4  # tamaño de la marca puntillista (px a 300 dpi ≈ 0,34 mm), cuadrada
 
-SRC = "assets/paisaje.jpg"
+SRC = "assets/arboles.jpg"
+# "foto": la fotografía en alta resolución, sin reinterpretar
+# "puntillista": reinterpretación con marcas cuadradas y grano de impresión
+STYLE = "foto"
+TRANSPARENT = True  # los espacios blancos se exportan sin fondo (PNG con transparencia)
 
 # ---------------------------------------------------------------------------
 # 1. Paisaje puntillista (marcas cuadradas, textura de impresión artesanal)
@@ -88,25 +92,31 @@ def stylize(img, out_w, out_h):
 photo = Image.open(SRC).convert("RGB")
 pw, ph = photo.size
 
-# Panorama completo a la altura del lienzo (cubre lomo, Parte 2 e intrusión en Parte 1)
-scale = H / ph
-pan_w = int(pw * scale)
-x_off = (pan_w - W) // 2
-photo_pan = photo.resize((pan_w, H), Image.LANCZOS).crop((x_off, 0, x_off + W, H))
-landscape = stylize(photo_pan, W, H)
+# Imagen a sangre en todo el lienzo (escala "cover" + recorte centrado)
+scale = max(W / pw, H / ph)
+rw, rh = int(np.ceil(pw * scale)), int(np.ceil(ph * scale))
+x_off, y_off = (rw - W) // 2, (rh - H) // 2
+photo_pan = photo.resize((rw, rh), Image.LANCZOS).crop((x_off, y_off, x_off + W, y_off + H))
 
-# Fuente de fragmentos para el 29: zona baja del paisaje (montañas, valle, vegetación)
-fx0, fy0 = int(pw * 0.02), int(ph * 0.47)
-fh = ph - fy0
-fw = int(fh * P1_END / H)
-frag_src = photo.crop((fx0, fy0, fx0 + fw, ph))
-fragments = stylize(frag_src, P1_END, H)
+if STYLE == "puntillista":
+    landscape = stylize(photo_pan, W, H)
+else:
+    landscape = np.asarray(photo_pan, np.float32)
+# los cuadrados del 29 muestran la imagen que hay "debajo" del papel
+fragments = landscape
+
+# Distribución aprobada (posiciones del 29, dispersión, huecos y recortes):
+# se restaura el estado aleatorio con el que se generó, para que cambiar
+# la imagen no mueva ningún cuadrado.
+import json
+RNG.bit_generator.state = json.load(open("assets/rng_layout.json"))
 
 # ---------------------------------------------------------------------------
 # 2. Lienzo base: papel blanco en Parte 1, paisaje desde la intrusión hacia la derecha
 # ---------------------------------------------------------------------------
 canvas = np.empty((H, W, 3), np.float32)
 canvas[:] = PAPER
+alpha = np.zeros((H, W), bool)  # True = imagen, False = blanco / transparente
 
 # Retícula del 29
 CELL = cm(1.26)  # 10 % más pequeño que la versión anterior (1,4 cm)
@@ -167,7 +177,9 @@ for ri in range(nrows):
     if y1 > y0:
         x0 = num_left + edge[ri] * CELL
         canvas[y0:y1, x0:] = landscape[y0:y1, x0:]
+        alpha[y0:y1, x0:] = True
 canvas[:, P1_END:] = landscape[:, P1_END:]
+alpha[:, P1_END:] = True
 
 squares = []  # (x0, y0, size, source)
 for ri in range(nrows):
@@ -205,6 +217,7 @@ for x0, y0, size, src in squares:
         continue
     tex = fragments if (src == "frag" and xb <= P1_END) else landscape
     canvas[ya:yb, xa:xb] = tex[ya:yb, xa:xb]
+    alpha[ya:yb, xa:xb] = True
 
 # ---------------------------------------------------------------------------
 # 2b. Cuadrados blancos "desprendidos" del paisaje junto a su borde
@@ -222,6 +235,7 @@ for ri in range(nrows):
         if x0 + size > P1_END - cm(0.2):
             continue
         canvas[max(y0, 0):max(y0 + size, 0), x0:x0 + size] = PAPER
+        alpha[max(y0, 0):max(y0 + size, 0), x0:x0 + size] = False
 
 # ---------------------------------------------------------------------------
 # 3. Parte 2: recortes cuadrados blancos / crema concentrados en el centro
@@ -266,25 +280,32 @@ for x0, y0, size in placed:
     RNG.random()  # (mantiene la secuencia aleatoria)
     # mismo blanco del fondo de la Parte 1: todo lo que no es imagen es blanco
     canvas[y0:y0 + size, x0:x0 + size] = PAPER
+    alpha[y0:y0 + size, x0:x0 + size] = False
 
 # ---------------------------------------------------------------------------
 # 4. Textura de papel impreso en toda la superficie
 # ---------------------------------------------------------------------------
-grain = RNG.normal(0, 1, (H // 2, W // 2)).astype(np.float32)
-grain = zoom(gaussian_filter(grain, 0.6), 2, order=1)
-grain = np.pad(grain, ((0, max(0, H - grain.shape[0])), (0, max(0, W - grain.shape[1]))), mode="edge")[:H, :W]
-blot = zoom(gaussian_filter(RNG.normal(0, 1, (H // 40, W // 40)).astype(np.float32), 3), 40, order=1)
-blot = np.pad(blot, ((0, max(0, H - blot.shape[0])), (0, max(0, W - blot.shape[1]))), mode="edge")[:H, :W]
-tex = 1 + 0.022 * grain + 0.05 * blot
-canvas *= tex[..., None]
+if STYLE == "puntillista":
+    grain = RNG.normal(0, 1, (H // 2, W // 2)).astype(np.float32)
+    grain = zoom(gaussian_filter(grain, 0.6), 2, order=1)
+    grain = np.pad(grain, ((0, max(0, H - grain.shape[0])), (0, max(0, W - grain.shape[1]))), mode="edge")[:H, :W]
+    blot = zoom(gaussian_filter(RNG.normal(0, 1, (H // 40, W // 40)).astype(np.float32), 3), 40, order=1)
+    blot = np.pad(blot, ((0, max(0, H - blot.shape[0])), (0, max(0, W - blot.shape[1]))), mode="edge")[:H, :W]
+    tex = 1 + 0.022 * grain + 0.05 * blot
+    canvas *= tex[..., None]
 canvas = np.clip(canvas, 0, 255).astype(np.uint8)
 
 # ---------------------------------------------------------------------------
 # 5. Exportación
 # ---------------------------------------------------------------------------
-img = Image.fromarray(canvas, "RGB")
-img.save("output/sq_caja_58.5x35.1cm_300dpi.png", dpi=(DPI, DPI), optimize=True)
-img.save("output/sq_caja_58.5x35.1cm_300dpi.pdf", resolution=DPI)
+img = Image.fromarray(canvas, "RGB")  # versión sobre blanco
+if TRANSPARENT:
+    rgba = img.copy()
+    rgba.putalpha(Image.fromarray(alpha.astype(np.uint8) * 255, "L"))
+    rgba.save("output/sq_caja_58.5x35.1cm_300dpi.png", dpi=(DPI, DPI), optimize=True)
+else:
+    img.save("output/sq_caja_58.5x35.1cm_300dpi.png", dpi=(DPI, DPI), optimize=True)
+img.save("output/sq_caja_58.5x35.1cm_300dpi_fondo_blanco.pdf", resolution=DPI)
 
 prev = img.resize((2400, int(2400 * H / W)), Image.LANCZOS)
 prev.save("output/preview.jpg", quality=90)
