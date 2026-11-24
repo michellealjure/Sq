@@ -310,6 +310,24 @@ if STYLE == "puntillista":
 canvas = np.clip(canvas, 0, 255).astype(np.uint8)
 
 # ---------------------------------------------------------------------------
+# 4b. Hojas tamaño carta con la ilustración completa (sin 29, sin recortes, sin blancos)
+# ---------------------------------------------------------------------------
+# Zonas elegidas sobre el montaje (cm desde la esquina superior izquierda del documento).
+CARTA_W, CARTA_H = cm(21.59), cm(27.94)  # 8,5 x 11 in
+CARTAS = {
+    "carta_1_izquierda": (13.52, 0.0),  # 13,52 – 35,11 cm (cruza el lomo)
+    "carta_2_derecha": (56.7 - 21.59, 0.0),                     # 35,11 – 56,70 cm
+}
+if STYLE == "puntillista":
+    full_illu = np.clip(landscape * tex[..., None], 0, 255).astype(np.uint8)
+    for name, (xc, yc) in CARTAS.items():
+        x0, y0 = cm(xc), cm(yc)
+        sheet = Image.fromarray(full_illu[y0:y0 + CARTA_H, x0:x0 + CARTA_W], "RGB")
+        assert sheet.size == (CARTA_W, CARTA_H), sheet.size
+        sheet.save(f"{OUT}/{name}_300dpi.png", dpi=(DPI, DPI), optimize=True)
+        sheet.save(f"{OUT}/{name}_300dpi.pdf", resolution=DPI)
+
+# ---------------------------------------------------------------------------
 # 5. Exportación
 # ---------------------------------------------------------------------------
 img = Image.fromarray(canvas, "RGB")  # versión sobre blanco

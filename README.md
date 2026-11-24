@@ -21,6 +21,7 @@ Las dos comparten exactamente la misma distribución del 29, la dispersión, los
 En cada carpeta:
 - `sq_caja_56.7x35.1cm_300dpi.png`: PNG RGBA a 300 dpi, los espacios blancos son transparentes.
 - `sq_caja_56.7x35.1cm_300dpi_fondo_blanco.pdf`: la misma composición sobre blanco.
+- Solo en `output/paisaje/`: `carta_1_izquierda_300dpi.png/.pdf` (13,52–35,11 cm) y `carta_2_derecha_300dpi.png/.pdf` (35,11–56,70 cm), desde arriba, tamaño carta (21,59 × 27,94 cm, 2550 × 3300 px) con la ilustración completa: sin 29, sin recortes, sin blancos.
 - `preview.jpg`, `preview_guias.jpg` (guías rosadas del montaje; no se imprime).
 
 ## Archivos
