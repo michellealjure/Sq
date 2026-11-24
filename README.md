@@ -16,7 +16,7 @@ Las dos comparten exactamente la misma distribución del 29, la dispersión, los
 | Carpeta | Imagen | Estilo |
 |---|---|---|
 | `output/arboles/` | `assets/arboles.jpg` (copa de árboles) | foto en alta resolución |
-| `output/paisaje/` | `assets/paisaje.jpg` (valle) | ilustración puntillista con grano de papel |
+| `output/paisaje/` | `assets/paisaje.jpg` (valle) | ilustración puntillista con grano de papel; en el PNG también los puntos blancos del puntillismo son transparentes |
 
 En cada carpeta:
 - `sq_caja_58.5x35.1cm_300dpi.png`: PNG RGBA a 300 dpi, los espacios blancos son transparentes.

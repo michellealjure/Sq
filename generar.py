@@ -100,6 +100,9 @@ def stylize(img, out_w, out_h):
     full = np.repeat(np.repeat(out, MARK, 0), MARK, 1)
     pad_h, pad_w = out_h - full.shape[0], out_w - full.shape[1]
     full = np.pad(full, ((0, pad_h), (0, pad_w), (0, 0)), mode="edge")
+    # máscara de las marcas de papel (puntos blancos del puntillismo), a tamaño final
+    g = np.repeat(np.repeat(gap, MARK, 0), MARK, 1)
+    stylize.last_gap = np.pad(g, ((0, pad_h), (0, pad_w)), mode="edge")
     return full
 
 
@@ -114,6 +117,7 @@ photo_pan = photo.resize((rw, rh), Image.LANCZOS).crop((x_off, y_off, x_off + W,
 
 if STYLE == "puntillista":
     landscape = stylize(photo_pan, W, H)
+    land_gap = stylize.last_gap
 else:
     landscape = np.asarray(photo_pan, np.float32)
 # los cuadrados del 29 muestran la imagen que hay "debajo" del papel
@@ -123,6 +127,7 @@ if STYLE == "puntillista":
     fx0, fy0 = int(pw * 0.02), int(ph * 0.47)
     fw = int((ph - fy0) * P1_END / H)
     fragments = stylize(photo.crop((fx0, fy0, fx0 + fw, ph)), P1_END, H)
+    frag_gap = stylize.last_gap
 
 # Distribución aprobada (posiciones del 29, dispersión, huecos y recortes):
 # se restaura el estado aleatorio con el que se generó, para que cambiar
@@ -136,6 +141,7 @@ RNG.bit_generator.state = json.load(open("assets/rng_layout.json"))
 canvas = np.empty((H, W, 3), np.float32)
 canvas[:] = PAPER
 alpha = np.zeros((H, W), bool)  # True = imagen, False = blanco / transparente
+src_map = np.zeros((H, W), np.uint8)  # 1 = paisaje, 2 = fragmentos del 29
 
 # Retícula del 29
 CELL = cm(1.26)  # 10 % más pequeño que la versión anterior (1,4 cm)
@@ -197,8 +203,10 @@ for ri in range(nrows):
         x0 = num_left + edge[ri] * CELL
         canvas[y0:y1, x0:] = landscape[y0:y1, x0:]
         alpha[y0:y1, x0:] = True
+        src_map[y0:y1, x0:] = 1
 canvas[:, P1_END:] = landscape[:, P1_END:]
 alpha[:, P1_END:] = True
+src_map[:, P1_END:] = 1
 
 squares = []  # (x0, y0, size, source)
 for ri in range(nrows):
@@ -237,6 +245,7 @@ for x0, y0, size, src in squares:
     tex = fragments if (src == "frag" and xb <= P1_END) else landscape
     canvas[ya:yb, xa:xb] = tex[ya:yb, xa:xb]
     alpha[ya:yb, xa:xb] = True
+    src_map[ya:yb, xa:xb] = 2 if tex is fragments and fragments is not landscape else 1
 
 # ---------------------------------------------------------------------------
 # 2b. Cuadrados blancos "desprendidos" del paisaje junto a su borde
@@ -320,6 +329,15 @@ canvas = np.clip(canvas, 0, 255).astype(np.uint8)
 img = Image.fromarray(canvas, "RGB")  # versión sobre blanco
 if TRANSPARENT:
     rgba = img.copy()
+    if STYLE == "puntillista":
+        # los puntos blancos del puntillismo también quedan transparentes
+        specks = np.zeros((H, W), bool)
+        specks[src_map == 1] = land_gap[src_map == 1]
+        if fragments is not landscape:
+            fr = np.zeros((H, W), bool)
+            fr[:, :P1_END] = frag_gap[:, :P1_END]
+            specks |= (src_map == 2) & fr
+        alpha &= ~specks
     rgba.putalpha(Image.fromarray(alpha.astype(np.uint8) * 255, "L"))
     rgba.save(f"{OUT}/sq_caja_58.5x35.1cm_300dpi.png", dpi=(DPI, DPI), optimize=True)
 else:
