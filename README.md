@@ -34,8 +34,10 @@ En cada carpeta:
 
 ## Primera hoja (piezas para pegar sobre la hoja lila)
 
-`python3 primera_hoja.py` (después de `python3 generar.py paisaje`). Salida en `output/primera_hoja/`:
+`python3 primera_hoja.py` (después de `python3 generar.py paisaje`). Versión 2, basada en la composición elegida: postal + estampilla + damero + cuadros sueltos, con retazos de la guarda (sin nube ni montañas). Salida en `output/primera_hoja/`:
 
-- `piezas/`: PNG sueltos con fondo transparente, tamaño real a 300 dpi: fondo de postal (8,6 × 13,2 cm, para la foto de 6,7 × 10 cm), nube, mosaico tejido, 12 cuadros sueltos y franja de montañas en serigrafía.
-- `imprimir_hoja_1` / `imprimir_hoja_2` (.png y .pdf): todas las piezas acomodadas en carta horizontal para imprimir y recortar.
-- `maqueta_hoja_lila.jpg`, `maqueta_libro_abierto.jpg`: propuesta de composición (solo referencia).
+- `piezas/`: PNG sueltos con fondo transparente, tamaño real a 300 dpi: postal (9,6 × 13,4 cm), estampilla perforada (7,6 × 10,9 cm; la foto de 6,7 × 10 cm va encima), damero izquierdo y derecho, 6 cuadros sueltos.
+- `imprimir_carta_horizontal.png/.pdf`: todas las piezas en una carta horizontal, con línea gris fina de corte.
+- `maqueta_hoja_lila.jpg`, `maqueta_libro_abierto.jpg`: composición de referencia (gris = ventana/foto).
+
+La versión 1 (nube, mosaico tejido, montañas en serigrafía) quedó en `primera_hoja_v1.py` y `output/primera_hoja_v1/`.
