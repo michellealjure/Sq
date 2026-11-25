@@ -31,3 +31,11 @@ En cada carpeta:
 - `assets/recortes_parte2.json`: posiciones aprobadas de los recortes de la Parte 2.
 - `assets/boceto_29.jpg`: boceto del 29.
 - `PROMPT_generador.md`: prompt para pasar la composición por un generador de imágenes.
+
+## Primera hoja (piezas para pegar sobre la hoja lila)
+
+`python3 primera_hoja.py` (después de `python3 generar.py paisaje`). Salida en `output/primera_hoja/`:
+
+- `piezas/`: PNG sueltos con fondo transparente, tamaño real a 300 dpi: fondo de postal (8,6 × 13,2 cm, para la foto de 6,7 × 10 cm), nube, mosaico tejido, 12 cuadros sueltos y franja de montañas en serigrafía.
+- `imprimir_hoja_1` / `imprimir_hoja_2` (.png y .pdf): todas las piezas acomodadas en carta horizontal para imprimir y recortar.
+- `maqueta_hoja_lila.jpg`, `maqueta_libro_abierto.jpg`: propuesta de composición (solo referencia).
